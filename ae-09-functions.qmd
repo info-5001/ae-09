@@ -1,0 +1,211 @@
+---
+title: "AE 09: Writing functions"
+author: Your name
+format: html
+---
+
+# Packages
+
+We will use the following packages in this application exercise.
+
+-   **tidyverse**: For data import, wrangling, and visualization.
+-   **nycflights13**: For data sets.
+
+```{r}
+#| label: load-packages
+#| message: false
+
+library(tidyverse)
+library(nycflights13)
+```
+
+# Vector function: fizzbuzz
+
+[**Fizz buzz**](https://en.wikipedia.org/wiki/Fizz_buzz) is a children's game that teaches about division.
+Players take turns counting incrementally, replacing any number divisible by three with the word "fizz" and any number divisible by five with the word "buzz".
+
+We will write a **vector function** that helps the user play fizzbuzz by calculating the correct response for any possible combination of divisors.
+
+## Function requirements
+
+The function you write should adhere to the following requirements:
+
+-   Three arguments/inputs
+    -   `nums`: A vector of "integers"[^1]
+    -   `div1`: An integer value (default value is 3)
+    -   `div2`: An integer value (default value is 5)
+-   Output: A vector of characters
+    -   If the number is divisible by `div1`, return `"Fizz"`.
+    -   If the number is divisible by `div2`, return `"Buzz"`.
+    -   If the number is divisible by `div1` and `div2`, return `"FizzBuzz"`.
+    -   Otherwise, return the number as a character.
+
+[^1]: You can interpret this literally as an integer type in R, but here I use "integer" in a mathematical sense.
+    The function should work for any numeric type, including integers, doubles, and complex numbers, as long as the value represents a whole number.
+
+::: callout-tip
+We have not yet covered explicit iterative operations.
+There is no need to use a `for` loop, `apply()` or `map()` functions, or any other explicit iteration.
+Instead, use your existing knowledge of vectorized operations and functions to write the function.
+:::
+
+::: {.callout-tip title="A helpful hint about modular division"}
+`%%` is modular division.
+It returns the remainder left over after the division, rather than a floating point number.
+
+```{r}
+#| label: modular-div
+
+5 / 3
+5 %% 3
+```
+:::
+
+::: {.callout-tip title="A helpful hint about `case_when()`"}
+`case_when()` is a vectorized version of `if_else()` that allows you to perform multiple tests at once. For example,
+
+```{r}
+#| label: case-when
+
+x <- c("apple", "orange", "cherry", "onion", "broccoli", "cucumber")
+
+# convert to fruit or vegetable
+case_when(
+  x %in% c("apple", "orange", "cherry") ~ "fruit",
+  x %in% c("onion", "broccoli", "cucumber") ~ "vegetable"
+)
+```
+:::
+
+```{r}
+#| label: fizzbuzz
+
+# add code here
+fizzbuzz <- function(nums, div1 = _____, div2 = _____) {
+  # case_when() makes a lot of sense here
+  case_when(
+    # add conditional criteria as separate arguments
+    TODO,
+    # if it doesn't match any criteria, return the number as a character string
+    .default = as.character(nums)
+  )
+}
+```
+
+## Test the function
+
+Test your function to ensure it produces the correct results.
+
+-   Create a sequence of integers between 1 and 30
+-   Use the function to calculate the fizzbuzz response for each number and the default rules (divisors 3 and 5). Store the output as a vector object.
+-   Use the function to calculate the fizzbuzz response for each number and the divisors 3 and 4. Store the output as a vector object.
+-   Repeat your tests, but this time store the results as columns in a data frame along with the original value. Write the operation using `mutate()`.
+
+```{r}
+#| label: fizzbuzz-test
+
+# test on a vector of numbers
+test_nums <- 1:30
+
+# output is a character vector
+fizzbuzz(nums = test_nums)
+fizzbuzz(nums = test_nums, div2 = 4L)
+
+# implement function within a data frame using mutate()
+tibble(nums = test_nums) |>
+  mutate(
+    fizzbuzz_3_5 = fizzbuzz(nums = nums),
+    fizzbuzz_3_4 = fizzbuzz(nums = nums, div2 = 4L)
+  )
+```
+
+# Data frame functions
+
+[**nycflights13**](https://nycflights13.tidyverse.org/) is an R package that contains several data tables containing information about all flights that departed from NYC (e.g. EWR, JFK and LGA) to destinations in the United States, Puerto Rico, and the American Virgin Islands) in 2013.
+
+Use the datasets from **nycflights13** to write the following functions.
+
+## Find all flights that were cancelled (i.e. `is.na(arr_time)`) or delayed by more than an hour
+
+```{r}
+#| label: filter-severe
+
+filter_severe <- function(df = NULL) {
+  df |>
+    filter(is.na(arr_time) | arr_delay > 60)
+}
+
+flights |> filter_severe()
+```
+
+## Count the number of cancelled flights and the number of flights delayed by more than an hour
+
+```{r}
+#| label: summarize-severe
+
+summarize_severe <- function(df = NULL) {
+  df |>
+    summarize(
+      n_cancelled = sum(is.na(arr_time)),
+      n_delayed = sum(arr_delay > 60, na.rm = TRUE)
+    )
+}
+
+flights |> group_by(dest) |> summarize_severe()
+```
+
+## Find all flights that were cancelled or delayed by more than a user supplied number of hours
+
+```{r}
+#| label: filter-severe-hours
+
+filter_severe <- function(df = NULL, hours = 1) {
+  df |>
+    TODO
+}
+
+flights |> filter_severe(hours = 2)
+```
+
+## Summarize the weather to compute the minimum, mean, and maximum, of a user supplied variable
+
+```{r}
+#| label: summarize-weather
+
+summarize_weather <- function(df = NULL, var = NULL) {
+  df |>
+    summarize(
+      min = min(TODO, na.rm = TRUE),
+      mean = mean(TODO, na.rm = TRUE),
+      max = max(TODO, na.rm = TRUE)
+    )
+}
+
+weather |> summarize_weather(temp)
+```
+
+## Convert the user supplied variable that uses clock time (e.g., `dep_time`, `arr_time`, etc.) into a decimal time (i.e. hours + (minutes / 60))
+
+::: {.callout-tip title="Finding the quotient"}
+`%/%` is integer division.
+It returns the quotient of the division, rather than a floating point number.
+
+```{r}
+#| label: quotient-div
+
+5 / 3
+5 %/% 3
+```
+:::
+
+```{r}
+#| label: standardize-time
+
+# add code here
+
+flights |> standardize_time(sched_dep_time)
+```
+
+# Acknowledgments
+
+-   Data frame function exercises are drawn from [**R for Data Science**](https://r4ds.hadley.nz/functions#exercises-1)
